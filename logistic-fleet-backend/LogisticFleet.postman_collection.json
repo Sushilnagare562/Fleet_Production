@@ -1,0 +1,582 @@
+{
+  "info": {
+    "name": "Logistic Fleet Backend API",
+    "description": "Full endpoint collection for the Logistic Fleet Java Spring Boot backend. Run 'Login' first (or 'Register') — it auto-saves the JWT into {{authToken}} for every other request via a test script.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081/api" },
+    { "key": "authToken", "value": "" },
+    { "key": "adminAuthToken", "value": "" },
+    { "key": "driverId", "value": "" },
+    { "key": "tripId", "value": "" },
+    { "key": "routeStopId", "value": "" },
+    { "key": "vehicleId", "value": "" },
+    { "key": "expenseId", "value": "" },
+    { "key": "earningId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (Driver)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ravi Kumar\",\n  \"email\": \"ravi.kumar@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"password123\",\n  \"vehicleNumber\": \"MH12AB1234\",\n  \"licenseNumber\": \"DL-1234567890\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', data.token);",
+                  "    pm.collectionVariables.set('driverId', String(data.userId));",
+                  "    console.log('Saved authToken and driverId from register response');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Driver)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ravi.kumar@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', data.token);",
+                  "    pm.collectionVariables.set('driverId', String(data.userId));",
+                  "    console.log('Saved authToken and driverId from login response');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "description": "Log in with a user whose role has been promoted to ADMIN in the database (see backend README). Saves the token into {{adminAuthToken}} for the Dispatch requests below."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('adminAuthToken', data.token);",
+                  "    console.log('Saved adminAuthToken from login response');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trips (Driver)",
+      "item": [
+        {
+          "name": "Get My Trips",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/trips/my", "host": ["{{baseUrl}}"], "path": ["trips", "my"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    if (Array.isArray(data) && data.length > 0) {",
+                  "        pm.collectionVariables.set('tripId', String(data[0].id));",
+                  "        if (data[0].routeStops && data[0].routeStops.length > 0) {",
+                  "            pm.collectionVariables.set('routeStopId', String(data[0].routeStops[0].id));",
+                  "        }",
+                  "        console.log('Saved tripId from first trip in list');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Trip By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/trips/{{tripId}}", "host": ["{{baseUrl}}"], "path": ["trips", "{{tripId}}"] }
+          }
+        },
+        {
+          "name": "Update Trip Status - Start Trip",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/trips/{{tripId}}/status", "host": ["{{baseUrl}}"], "path": ["trips", "{{tripId}}", "status"] }
+          }
+        },
+        {
+          "name": "Update Trip Status - Complete Trip",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/trips/{{tripId}}/status", "host": ["{{baseUrl}}"], "path": ["trips", "{{tripId}}", "status"] }
+          }
+        },
+        {
+          "name": "Update Trip Status - Cancel Trip",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/trips/{{tripId}}/status", "host": ["{{baseUrl}}"], "path": ["trips", "{{tripId}}", "status"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dock Events",
+      "item": [
+        {
+          "name": "Record Dock-In",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": {{tripId}},\n  \"routeStopId\": {{routeStopId}},\n  \"eventType\": \"DOCK_IN\",\n  \"locationName\": \"Warehouse A\",\n  \"latitude\": 19.0760,\n  \"longitude\": 72.8777,\n  \"remarks\": \"Arrived on time\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/dock-events", "host": ["{{baseUrl}}"], "path": ["dock-events"] }
+          }
+        },
+        {
+          "name": "Record Dock-Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": {{tripId}},\n  \"routeStopId\": {{routeStopId}},\n  \"eventType\": \"DOCK_OUT\",\n  \"locationName\": \"Warehouse A\",\n  \"latitude\": 19.0760,\n  \"longitude\": 72.8777,\n  \"remarks\": \"Loading complete\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/dock-events", "host": ["{{baseUrl}}"], "path": ["dock-events"] }
+          }
+        },
+        {
+          "name": "Get Dock Events For Trip",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/dock-events/trip/{{tripId}}", "host": ["{{baseUrl}}"], "path": ["dock-events", "trip", "{{tripId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expenses",
+      "item": [
+        {
+          "name": "Add Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": {{tripId}},\n  \"category\": \"FUEL\",\n  \"amount\": 1500.00,\n  \"description\": \"Diesel refill\",\n  \"expenseDate\": \"2026-08-04\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/expenses", "host": ["{{baseUrl}}"], "path": ["expenses"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('expenseId', String(data.id));",
+                  "    console.log('Saved expenseId from newly created expense');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Expenses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/expenses/my", "host": ["{{baseUrl}}"], "path": ["expenses", "my"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Earnings",
+      "item": [
+        {
+          "name": "Get My Earnings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/earnings/my", "host": ["{{baseUrl}}"], "path": ["earnings", "my"] }
+          }
+        },
+        {
+          "name": "Get My Earnings Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/earnings/my/summary", "host": ["{{baseUrl}}"], "path": ["earnings", "my", "summary"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dispatch (Admin only)",
+      "item": [
+        {
+          "name": "Assign Trip To Driver",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"driverId\": {{driverId}},\n  \"origin\": \"Mumbai Central Warehouse\",\n  \"destination\": \"Pune Distribution Hub\",\n  \"scheduledStart\": \"2026-08-05T08:00:00\",\n  \"scheduledEnd\": \"2026-08-05T14:00:00\",\n  \"distanceKm\": 150.5,\n  \"notes\": \"Handle fragile items with care\",\n  \"routeStops\": [\n    {\n      \"locationName\": \"Mumbai Central Warehouse\",\n      \"latitude\": 19.0760,\n      \"longitude\": 72.8777,\n      \"stopType\": \"PICKUP\",\n      \"plannedTime\": \"2026-08-05T08:00:00\",\n      \"sequenceNo\": 1\n    },\n    {\n      \"locationName\": \"Pune Distribution Hub\",\n      \"latitude\": 18.5204,\n      \"longitude\": 73.8567,\n      \"stopType\": \"DELIVERY\",\n      \"plannedTime\": \"2026-08-05T14:00:00\",\n      \"sequenceNo\": 2\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/dispatch/trips", "host": ["{{baseUrl}}"], "path": ["dispatch", "trips"] },
+            "description": "Requires a token from a user whose role is ADMIN. See 'Login (Admin)' in the Auth folder."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('tripId', String(data.id));",
+                  "    if (data.routeStops && data.routeStops.length > 0) {",
+                  "        pm.collectionVariables.set('routeStopId', String(data.routeStops[0].id));",
+                  "    }",
+                  "    console.log('Saved tripId from newly assigned trip');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Trips",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAuthToken}}" }],
+            "url": { "raw": "{{baseUrl}}/dispatch/trips", "host": ["{{baseUrl}}"], "path": ["dispatch", "trips"] }
+          }
+        },
+        {
+          "name": "Get Trip Status Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAuthToken}}" }],
+            "url": { "raw": "{{baseUrl}}/dispatch/trips/summary", "host": ["{{baseUrl}}"], "path": ["dispatch", "trips", "summary"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Drivers",
+      "item": [
+        {
+          "name": "Create Driver",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Suresh Patil\",\n  \"email\": \"suresh.patil@example.com\",\n  \"phone\": \"9876500011\",\n  \"temporaryPassword\": \"changeme123\",\n  \"vehicleNumber\": \"MH14XY5678\",\n  \"licenseNumber\": \"DL-9988776655\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/drivers", "host": ["{{baseUrl}}"], "path": ["admin", "drivers"] }
+          }
+        },
+        {
+          "name": "Get All Drivers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAuthToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/drivers", "host": ["{{baseUrl}}"], "path": ["admin", "drivers"] }
+          }
+        },
+        {
+          "name": "Update Driver Status (Activate/Deactivate)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/drivers/{{driverId}}/status", "host": ["{{baseUrl}}"], "path": ["admin", "drivers", "{{driverId}}", "status"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Vehicles",
+      "item": [
+        {
+          "name": "Create Vehicle",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleNumber\": \"MH12AB1234\",\n  \"type\": \"TRUCK\",\n  \"model\": \"Tata 407\",\n  \"capacityKg\": 2500,\n  \"assignedDriverId\": {{driverId}}\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/vehicles", "host": ["{{baseUrl}}"], "path": ["admin", "vehicles"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('vehicleId', String(data.id));",
+                  "    console.log('Saved vehicleId from newly created vehicle');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Vehicles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAuthToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/vehicles", "host": ["{{baseUrl}}"], "path": ["admin", "vehicles"] }
+          }
+        },
+        {
+          "name": "Update Vehicle Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"MAINTENANCE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/vehicles/{{vehicleId}}/status", "host": ["{{baseUrl}}"], "path": ["admin", "vehicles", "{{vehicleId}}", "status"] }
+          }
+        },
+        {
+          "name": "Assign Driver To Vehicle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"driverId\": {{driverId}}\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/vehicles/{{vehicleId}}/assign-driver", "host": ["{{baseUrl}}"], "path": ["admin", "vehicles", "{{vehicleId}}", "assign-driver"] }
+          }
+        },
+        {
+          "name": "Delete Vehicle",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAuthToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/vehicles/{{vehicleId}}", "host": ["{{baseUrl}}"], "path": ["admin", "vehicles", "{{vehicleId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Expense Approvals",
+      "item": [
+        {
+          "name": "Get All Expenses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAuthToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/expenses", "host": ["{{baseUrl}}"], "path": ["admin", "expenses"] }
+          }
+        },
+        {
+          "name": "Approve Expense",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"reviewNotes\": \"Looks good\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/expenses/{{expenseId}}/status", "host": ["{{baseUrl}}"], "path": ["admin", "expenses", "{{expenseId}}", "status"] }
+          }
+        },
+        {
+          "name": "Reject Expense",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"REJECTED\",\n  \"reviewNotes\": \"Missing receipt\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/expenses/{{expenseId}}/status", "host": ["{{baseUrl}}"], "path": ["admin", "expenses", "{{expenseId}}", "status"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Earnings",
+      "item": [
+        {
+          "name": "Create Earning For Driver",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"driverId\": {{driverId}},\n  \"tripId\": {{tripId}},\n  \"baseAmount\": 2000.00,\n  \"bonus\": 200.00,\n  \"deduction\": 0,\n  \"periodStart\": \"2026-08-01\",\n  \"periodEnd\": \"2026-08-07\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/earnings", "host": ["{{baseUrl}}"], "path": ["admin", "earnings"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('earningId', String(data.id));",
+                  "    console.log('Saved earningId from newly created earning');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Earnings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAuthToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/earnings", "host": ["{{baseUrl}}"], "path": ["admin", "earnings"] }
+          }
+        },
+        {
+          "name": "Mark Earning As Paid",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAuthToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAID\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/earnings/{{earningId}}/status", "host": ["{{baseUrl}}"], "path": ["admin", "earnings", "{{earningId}}", "status"] }
+          }
+        }
+      ]
+    }
+  ]
+}

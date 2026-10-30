@@ -1,0 +1,53 @@
+name: logistic_fleet
+description: Logistic Fleet - trip, route, earnings & expense management for drivers.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  dio: ^5.4.3+1
+  provider: ^6.1.2
+  flutter_secure_storage: ^9.2.2
+  intl: ^0.20.2
+  shared_preferences: ^2.3.2  # persist theme + language prefs (added for i18n/theming)
+  google_fonts: ^6.2.1
+  geolocator: ^12.0.0
+  fl_chart: ^0.68.0
+
+  # Excel report download/open/share (admin "Reports" tab)
+  path_provider: ^2.1.3
+  open_filex: ^4.5.0
+  share_plus: ^10.0.2
+
+  # Live GPS tracking dashboard
+  google_maps_flutter: ^2.9.0
+  web_socket_channel: ^3.0.1
+
+  # Turns a tapped map point into a readable address for the location picker
+  geocoding: ^3.0.0
+
+  # Push notifications
+  firebase_core: ^3.6.0
+  firebase_messaging: ^15.1.3
+  flutter_local_notifications: ^18.0.1
+
+  # Profile photo picking (Profile tab "Add profile pic")
+  image_picker: ^1.1.2
+
+  # Opens the device's maps app for turn-by-turn navigation to a route stop
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

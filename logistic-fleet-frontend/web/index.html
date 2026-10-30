@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base href="$FLUTTER_BASE_HREF">
+
+    <meta charset="UTF-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta name="description" content="Logistic Fleet Driver - trip, route, earnings & expense management for drivers.">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Logistic Fleet Driver">
+    <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+    <link rel="icon" type="image/png" href="favicon.png"/>
+
+    <title>Logistic Fleet</title>
+    <link rel="manifest" href="manifest.json">
+
+    <!--
+      Google Maps JS API for the Live Tracking dashboard on Flutter Web.
+      This is a THIRD, separate key requirement from the Android/iOS native
+      keys already set in AndroidManifest.xml / AppDelegate.swift - web uses
+      "Maps JavaScript API" instead of "Maps SDK for Android/iOS", so make
+      sure that API is enabled too for whichever key you use here.
+      Without this script tag, google.maps is undefined and the map crashes
+      with "TypeError: Cannot read properties of undefined (reading 'maps')".
+    -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY_HERE"></script>
+
+    <style>
+        html, body { height: 100%; margin: 0; background: #F6F8F7; }
+        #loading {
+          position: fixed; inset: 0; display: flex; align-items: center;
+          justify-content: center; font-family: sans-serif; color: #0F6E5C;
+        }
+    </style>
+</head>
+<body>
+<div id="loading">Loading Logistic Fleet...!</div>
+<script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
